@@ -46,8 +46,8 @@ router.post('/login',(req,res)=>{
               }
           res.cookie("SID",id,{expires:new Date(Date.now()+900000),httpOnly:true})
 
-            res.render("pages/members",{title:"Members Home",person:session.sessions[id].user.username,session:session.sessions[id]});
-        //res.send(JSON.stringify(user));
+            res.render("pages/members",{title:"Members Home",person:session.sessions[id].user,session:session.sessions[id]});
+
         console.log(user)
       }else{
         res.render('pages/errors',{title:"Error",err_message:"Wrong Username or Password",session:session.sessions[req.cookies.SID]})
@@ -72,8 +72,7 @@ router.get('/logout',(req,res)=>{
   let SID=req.cookies.SID;
   delete session.sessions[SID];
   res.cookie("SID","",{expires:new Date(Date.now()-900000)})
-  //console.log(SID);
-  //res.cookie("SID","",{expires:0});
+
   res.redirect('/');
   console.log("All Sessions Destroyed and Loged Out");
 })
@@ -85,7 +84,7 @@ let id=req.cookies.SID;
 let sess=session.sessions[id];
 //if session is undefined than this will be false
 if(sess){
-  res.render('pages/members',{title:"Members Home",person:session.sessions[id].user.username,session:session.sessions[id]});
+  res.render('pages/members',{title:"Members Home",person:session.sessions[id].user,session:session.sessions[id]});
 
 }else{
   res.render('pages/errors',{title:"Error",err_message:"You have  not loged in",session:session.sessions[id]});
