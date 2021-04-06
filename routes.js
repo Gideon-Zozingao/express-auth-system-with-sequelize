@@ -4,6 +4,7 @@ const router = express.Router();
 const cookieParser = require("cookie-parser");
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
+const {Sequelize,Model,DataTypes,Op}=require("sequelize");
 const matchCredentials = require('./utils.js')
 const session=require("./sessions.js")
 const {User}=require("./db")
@@ -28,25 +29,52 @@ router.post('/create',async function(req,res){
 
 })
 
+//login
+router.post('/login',(req,res)=>{
+  let body=req.body;
+  User.findAll({
+    where:{
+      [Op.and]:[
+        {username:body.username},{password:body.password}
+      ]}
+    }).then((user)=>{
+      if(user.length>0){
+          let id=uuidv4();
+          session.sessions[id]={
+                user:user,
+                timeOfLogin:Date.now()
+              }
+          res.cookie("SID",id,{expires:new Date(Date.now()+900000),httpOnly:true})
+
+            res.render("pages/members",{title:"Members Home",person:session.sessions[id].user.username,session:session.sessions[id]});
+        //res.send(JSON.stringify(user));
+        console.log(`${user} ${session.sessions}`)
+      }else{
+        res.render('pages/errors',{title:"Error",err_message:"Wrong Username or Password",session:session.sessions[req.cookies.SID]})
+        console.log("Invalid Username or Password")
+      }
+
+  })
+})
 
 //login
-router.post('/login',async function(req,res){
-
-  if(await matchCredentials(req.body)===true){
-    let user=req.body.username;
-    let id=uuidv4();
-    session.sessions[id]={
-      user:user,
-      timeOfLogin:Date.now()
-    }
-    //created cookies that holds the UUID (session id)
-res.cookie("SID",id,{expires:new Date(Date.now()+900000),httpOnly:true})
-    console.log(session.sessions);
-    res.render("pages/members",{title:"Members Home",person:session.sessions[id].user.username,session:session.sessions[id]});
-  }else{
-    res.render("pages/errors",{title:"Error",err_message:"Invalid credentials",session:session.sessions[req.cookies.SID]})
-  }
-})
+// router.post('/login',async function(req,res){
+//
+//   if(await matchCredentials(req.body)===true){
+//     let user=req.body.username;
+//     let id=uuidv4();
+//     session.sessions[id]={
+//       user:user,
+//       timeOfLogin:Date.now()
+//     }
+//     //created cookies that holds the UUID (session id)
+// res.cookie("SID",id,{expires:new Date(Date.now()+900000),httpOnly:true})
+//     console.log(session.sessions);
+//     res.render("pages/members",{title:"Members Home",person:session.sessions[id].user.username,session:session.sessions[id]});
+//   }else{
+//     res.render("pages/errors",{title:"Error",err_message:"Invalid credentials",session:session.sessions[req.cookies.SID]})
+//   }
+// })
 
 
 router.get('/login',(req,res)=>{
