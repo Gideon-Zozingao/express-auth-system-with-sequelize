@@ -48,7 +48,7 @@ router.post('/login',(req,res)=>{
 
             res.render("pages/members",{title:"Members Home",person:session.sessions[id].user.username,session:session.sessions[id]});
         //res.send(JSON.stringify(user));
-        console.log(`${user} ${session.sessions}`)
+        console.log(user)
       }else{
         res.render('pages/errors',{title:"Error",err_message:"Wrong Username or Password",session:session.sessions[req.cookies.SID]})
         console.log("Invalid Username or Password")
@@ -56,26 +56,6 @@ router.post('/login',(req,res)=>{
 
   })
 })
-
-//login
-// router.post('/login',async function(req,res){
-//
-//   if(await matchCredentials(req.body)===true){
-//     let user=req.body.username;
-//     let id=uuidv4();
-//     session.sessions[id]={
-//       user:user,
-//       timeOfLogin:Date.now()
-//     }
-//     //created cookies that holds the UUID (session id)
-// res.cookie("SID",id,{expires:new Date(Date.now()+900000),httpOnly:true})
-//     console.log(session.sessions);
-//     res.render("pages/members",{title:"Members Home",person:session.sessions[id].user.username,session:session.sessions[id]});
-//   }else{
-//     res.render("pages/errors",{title:"Error",err_message:"Invalid credentials",session:session.sessions[req.cookies.SID]})
-//   }
-// })
-
 
 router.get('/login',(req,res)=>{
 res.render("pages/login",{title:"Login",session:session.sessions[req.cookies.SID]});
