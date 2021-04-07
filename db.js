@@ -1,9 +1,12 @@
 const {Sequelize,Model,DataTypes,Op}=require("sequelize");
 
 const sequelize=new Sequelize("sqlite::memory:");
+
 try{
-   sequelize.authenticate()
-  console.log("Connection hase been  to the database server has been Established");
+   sequelize.authenticate().then(()=>{
+     console.log("Database server Connection Established");
+   })
+
 }catch(error){
   console.error(`Unable to conect to the Database ${error}`)
 }
