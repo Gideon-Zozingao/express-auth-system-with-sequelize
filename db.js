@@ -14,12 +14,21 @@ User.init({
     password:DataTypes.STRING
 },{sequelize,modelName:"user"});
 
+ class Session extends Model{}
+ Session.init({
+   sessionID:DataTypes.UUID,
+   user:DataTypes.STRING,
+   timeOfLogin:DataTypes.DATE
+
+ },{sequelize,moelName:"session"});
+
 (async()=>{
     await sequelize.sync()
 })()
 
 let models={
-    User:User
+    User:User,
+    Session:Session
 }
 
 module.exports=models

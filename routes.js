@@ -4,11 +4,13 @@ const router = express.Router();
 const cookieParser = require("cookie-parser");
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
-const {Sequelize,Model,DataTypes,Op}=require("sequelize");
-const matchCredentials = require('./utils.js')
-const session=require("./sessions.js")
-const {User}=require("./db")
+const {Sequelize,Op}=require("sequelize");
 
+const session=require("./sessions.js");
+const {User,Session}=require("./db");
+const matchCredentials = require('./utils.js');
+
+//home route
 router.get('/',(req,res)=>{
   res.render('pages/home',{title:"Home",session:session.sessions[req.cookies.SID]});
 })
@@ -30,66 +32,91 @@ router.post('/create',async function(req,res){
 })
 
 //login
-router.post('/login',(req,res)=>{
-  let body=req.body;
-  User.findAll({
+router.post('/login',async(req,res)=>{
+  let user= await User.findAll({
     where:{
       [Op.and]:[
-        {username:body.username},{password:body.password}
-      ]}
-    }).then((user)=>{
-      if(user.length>0){
-          let id=uuidv4();
-          session.sessions[id]={
-                user:user,
-                timeOfLogin:Date.now()
-              }
-          res.cookie("SID",id,{expires:new Date(Date.now()+900000),httpOnly:true})
+      {username:req.body.username},
+      {password:req.body.password}
+      ]
+    }
+  }).then((user)=>{
+    if(user.length>0){
 
-            res.render("pages/members",{title:"Members Home",person:session.sessions[id].user,session:session.sessions[id]});
+      const sessid =uuidv4()
 
-        console.log(user)
-      }else{
-        res.render('pages/errors',{title:"Error",err_message:"Wrong Username or Password",session:session.sessions[req.cookies.SID]})
-        console.log("Invalid Username or Password")
-      }
+    let session=Session.create({
+          user: user.id,
+          timeOfLogin: Date.now(),
+        	sessionID: sessid
+      })
 
+      res.cookie('SID', sessid, {
+        expires: new Date(Date.now() + 900000),
+        httpOnly: true
+      })
+      console.log(JSON.stringify(session));
+       res.render("pages/members",{title:"Members Home"});
+
+    }else{
+      res.render('pages/errors',{title:"Error",err_message:"Wrong Username or Password"})
+      console.log("Invalid Username or Password")
+
+    }
   })
+
+
 })
 
+//go to login page
 router.get('/login',(req,res)=>{
 res.render("pages/login",{title:"Login",session:session.sessions[req.cookies.SID]});
 })
+
+//registration route
 router.get('/register',(req,res)=>{
 res.render("pages/register",{title:"Create Account",session:session.sessions[req.cookies.SID]});
 })
 
-
-
-
-
-router.get('/logout',(req,res)=>{
+//logout route
+router.get('/logout',async(req,res)=>{
   let SID=req.cookies.SID;
-  delete session.sessions[SID];
-  res.cookie("SID","",{expires:new Date(Date.now()-900000)})
 
+  res.cookie("SID","",{expires:new Date(Date.now()-900000)})
+await Session.destroy({
+  where:{
+    sessionID:SID
+  }
+}).then(()=>{
   res.redirect('/');
   console.log("All Sessions Destroyed and Loged Out");
 })
 
 
+})
+
+
 //this is a protected homepage.
-router.get('/profile',(req,res)=>{
+router.get('/profile',async(req,res)=>{
 let id=req.cookies.SID;
-let sess=session.sessions[id];
-//if session is undefined than this will be false
-if(sess){
-  res.render('pages/members',{title:"Members Home",person:session.sessions[id].user,session:session.sessions[id]});
+if(id!==undefined){
+  let sess= await Session.findAll({
+    where:{
+      sessionID:id
+    }
+  }).then((sess)=>{
+    //if session is undefined than this will be false
+    if(sess.length>0){
+      res.render('pages/members',{title:"Members Home"});
+
+    }
+  });
 
 }else{
-  res.render('pages/errors',{title:"Error",err_message:"You have  not loged in",session:session.sessions[id]});
-
+  res.render('pages/errors',{title:"Error",err_message:"You have  not loged in"});
 }
+
+
 
 })
 
