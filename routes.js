@@ -12,21 +12,25 @@ const matchCredentials = require('./utils.js');
 
 //home route
 router.get('/',(req,res)=>{
-  res.render('pages/home',{title:"Home",session:session.sessions[req.cookies.SID]});
+	let sessID=req.cookies.SID;
+  res.render('pages/home',{title:"Home",session:sessID});
 })
 
 //create a user acount
 router.post('/create',async function(req,res){
+	let sessID=req.cookies.SID;
   let body=req.body;
   if(body.username!==""&&body.password!==""){
     const user=await User.create({
       username:body.username,
       password:body.password
+    }).then((user)=>{
+    	console.log(user.toJSON());
+
     });
-    console.log(user.toJSON());
-    res.redirect('/')
+		res.render("pages/home",{title:"Home",session:sessID})
   }else{
-  res.render('pages/errors',{title:"Error",err_message:"Registration was Not Successful, Required are fields Empty",session:session.sessions[req.cookies.SID]})
+  res.render('pages/errors',{title:"Error",err_message:"Registration was Not Successful, Required are fields Empty",session:sessID})
   }
 
 })
@@ -56,7 +60,7 @@ router.post('/login',async(req,res)=>{
         httpOnly: true
       })
       console.log(JSON.stringify(session));
-       res.render("pages/members",{title:"Members Home"});
+       res.render("pages/members",{title:"Members Home",session:sessid});
 
     }else{
       res.render('pages/errors',{title:"Error",err_message:"Wrong Username or Passwor",session:undefined})
@@ -70,12 +74,14 @@ router.post('/login',async(req,res)=>{
 
 //go to login page
 router.get('/login',(req,res)=>{
-res.render("pages/login",{title:"Login",session:session.sessions[req.cookies.SID]});
+	let sessID=req.cookies.SID;
+res.render("pages/login",{title:"Login",session:sessID});
 })
 
 //registration route
 router.get('/register',(req,res)=>{
-res.render("pages/register",{title:"Create Account",session:session.sessions[req.cookies.SID]});
+	let sessID=req.cookies.SID;
+res.render("pages/register",{title:"Create Account",session:sessID});
 })
 
 //logout route
@@ -103,16 +109,16 @@ await Session.destroy({
 
 //this is a protected homepage.
 router.get('/profile',async(req,res)=>{
-let id=req.cookies.SID;
-if(id!==undefined){
+let sessID=req.cookies.SID;
+if(sessID!==undefined){
   let sess= await Session.findAll({
     where:{
-      sessionID:id
+      sessionID:sessID
     }
   }).then((sess)=>{
     //if session is undefined than this will be false
     if(sess.length>0){
-      res.render('pages/members',{title:"Members Home"});
+      res.render('pages/members',{title:"Members Home",session:sessID});
 
     }
   });
