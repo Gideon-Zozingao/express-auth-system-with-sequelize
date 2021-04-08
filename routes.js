@@ -59,7 +59,7 @@ router.post('/login',async(req,res)=>{
        res.render("pages/members",{title:"Members Home"});
 
     }else{
-      res.render('pages/errors',{title:"Error",err_message:"Wrong Username or Password"})
+      res.render('pages/errors',{title:"Error",err_message:"Wrong Username or Passwor",session:undefined})
       console.log("Invalid Username or Password")
 
     }
@@ -81,7 +81,7 @@ res.render("pages/register",{title:"Create Account",session:session.sessions[req
 //logout route
 router.get('/logout',async(req,res)=>{
   let SID=req.cookies.SID;
-
+if(SID!==undefined){
   res.cookie("SID","",{expires:new Date(Date.now()-900000)})
 await Session.destroy({
   where:{
@@ -91,6 +91,11 @@ await Session.destroy({
   res.redirect('/');
   console.log("All Sessions Destroyed and Loged Out");
 })
+
+
+}else{
+  res.redirect('/');
+}
 
 
 })
